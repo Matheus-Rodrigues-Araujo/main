@@ -1,0 +1,46 @@
+services:
+  main:
+    container_name: main
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    networks:
+      - app-network
+    env_file:
+      - .env.production
+    depends_on:
+      - mongo-db
+      
+  microservice-listener:
+    container_name: microservice-listener
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.production
+    networks:
+      - app-network
+    command: ["node", "dist/listener.js"]
+    depends_on:
+      - mongo-db
+      - main
+
+  mongo-db:
+    image: mongo:6.0
+    container_name: mongo-db
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+    volumes:
+      - main_data:/data/db
+
+volumes:
+  main_data:
+
+networks:
+  app-network:
+    driver: bridge
+    external: true
